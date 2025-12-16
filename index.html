@@ -877,7 +877,7 @@
         function loadState() {
             const stored = localStorage.getItem(storageKey);
             if (stored) return JSON.parse(stored);
-            return { tickets: defaultTickets, settings: { maxTickets: 100, maintenance: false } };
+            return { tickets: defaultTickets, settings: { maxTickets: 1000, maintenance: false } };
         }
 
         function persistState() {
