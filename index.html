@@ -143,7 +143,8 @@
         }
 
         input,
-        select {
+        select,
+        textarea {
             width: 100%;
             padding: 12px;
             border: 1px solid #ccc;
@@ -154,9 +155,15 @@
         }
 
         input:focus,
-        select:focus {
+        select:focus,
+        textarea:focus {
             border-color: var(--primary-color);
             outline: none;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
         }
 
         label {
@@ -173,7 +180,8 @@
             position: relative
         }
 
-        .login-input-group input {
+        .login-input-group input,
+        .login-input-group select {
             padding: 12px;
         }
 
@@ -189,10 +197,13 @@
             font-weight: normal;
             font-size: 16px;
             margin: 0;
+            z-index: 10;
         }
 
         .login-input-group input:focus+label,
-        .login-input-group input:not(:placeholder-shown)+label {
+        .login-input-group input:not(:placeholder-shown)+label,
+        .login-input-group select:focus+label,
+        .login-input-group select:not(:placeholder-shown)+label {
             top: -10px;
             font-size: 12px;
             color: var(--primary-color);
@@ -277,6 +288,15 @@
             border-radius: var(--radius);
         }
 
+        .company-domain {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-left: 10px;
+            border: 1px solid #ccc;
+            padding: 2px 8px;
+            border-radius: 12px;
+        }
+
         /* Filter Section */
         .filter-section {
             background: var(--surface-color);
@@ -350,6 +370,21 @@
         .status-high {
             background-color: #ffebee;
             color: #c62828;
+        }
+
+        .status-open {
+            background-color: #bbdefb;
+            color: #0d47a1;
+        }
+
+        .status-in_progress {
+            background-color: #fff9c4;
+            color: #f57f17;
+        }
+
+        .status-closed {
+            background-color: #e0e0e0;
+            color: #424242;
         }
 
         .tag-pill {
@@ -464,6 +499,24 @@
             border-top: 5px solid var(--success-color);
         }
 
+        /* Details View */
+        .detail-row {
+            margin-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 8px;
+        }
+
+        .detail-label {
+            font-weight: bold;
+            color: #666;
+            font-size: 12px;
+        }
+
+        .detail-value {
+            margin-top: 4px;
+            font-size: 14px;
+        }
+
         /* Loading Spinner */
         .loading-overlay {
             position: fixed;
@@ -510,6 +563,17 @@
     <div id="login-screen">
         <div class="login-card">
             <h2>Sistema de Tickets</h2>
+
+            <div class="login-input-group">
+                <select id="login-company" required>
+                    <option value="" disabled selected hidden> </option>
+                    <option value="techcorp">TechCorp</option>
+                    <option value="softsolutions">SoftSolutions</option>
+                    <option value="innovait">InnovaIT</option>
+                </select>
+                <label>Empresa</label>
+            </div>
+
             <div class="login-input-group">
                 <input type="text" id="login-user" placeholder=" " required>
                 <label>Usuario</label>
@@ -518,7 +582,10 @@
                 <input type="password" id="login-pass" placeholder=" " required>
                 <label>Contraseña</label>
             </div>
-            <p style="font-size:12px; color:#999; margin-bottom:15px;">Hint: admin / 12345</p>
+            <p style="font-size:12px; color:#999; margin-bottom:15px;">
+                Admin: admin / 12345<br>
+                User: user / 12345
+            </p>
             <button class="btn btn-primary" onclick="login()" style="width:100%">
                 INGRESAR
             </button>
@@ -528,76 +595,96 @@
     <!-- Dashboard -->
     <div id="dashboard" class="hidden">
         <div class="sidebar">
-            <div class="sidebar-header">TicketSystem v5.0</div>
-            <div class="nav-item active"><i class="material-icons">dashboard</i> Tickets</div>
-            <div class="nav-item"><i class="material-icons">settings</i> Configuración</div>
+            <div class="sidebar-header">TicketSystem v6.0</div>
+            <div class="nav-item active" onclick="switchTab('tickets')"><i class="material-icons">dashboard</i> Tickets
+            </div>
+            <div class="nav-item hidden" id="nav-settings" onclick="switchTab('settings')"><i
+                    class="material-icons">settings</i> Configuración</div>
         </div>
         <div class="main-content">
             <div class="top-bar">
                 <div class="flex items-center gap-2">
                     <span style="font-weight:bold; font-size:18px">Gestión de Tickets</span>
+                    <span id="company-domain-display" class="company-domain"></span>
                 </div>
                 <div class="flex items-center gap-2">
                     <span id="user-display">Usuario</span>
+                    <span id="role-display"
+                        style="font-size:11px; background:#ddd; padding:2px 6px; border-radius:4px"></span>
                     <button class="btn btn-flat btn-icon" onclick="logout()"><i
                             class="material-icons">logout</i></button>
                 </div>
             </div>
 
-            <!-- Advanced Filters -->
-            <div class="filter-section">
-                <div class="flex justify-between items-center" style="margin-bottom:15px">
-                    <h4 style="margin:0">Filtros Avanzados</h4>
-                    <button class="btn btn-flat" style="padding:5px" onclick="clearFilters()">Limpiar</button>
+            <!-- View: Tickets -->
+            <div id="view-tickets">
+                <!-- Advanced Filters -->
+                <div class="filter-section">
+                    <div class="flex justify-between items-center" style="margin-bottom:15px">
+                        <h4 style="margin:0">Filtros Avanzados</h4>
+                        <button class="btn btn-flat" style="padding:5px" onclick="clearFilters()">Limpiar</button>
+                    </div>
+                    <div class="filter-grid">
+                        <input type="text" id="f-id" placeholder="ID Ticket">
+                        <input type="text" id="f-subject" placeholder="Asunto">
+                        <input type="text" id="f-email" placeholder="Email">
+                        <select id="f-category">
+                            <option value="">Todas las Categorías</option>
+                            <option value="Sistemas">Sistemas</option>
+                            <option value="RRHH">RRHH</option>
+                            <option value="Finanzas">Finanzas</option>
+                            <option value="General">General</option>
+                        </select>
+                        <select id="f-priority">
+                            <option value="">Todas las Prioridades</option>
+                            <option value="LOW">Baja</option>
+                            <option value="MEDIUM">Media</option>
+                            <option value="HIGH">Alta</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary w-full" onclick="applyFilters()">
+                        <i class="material-icons" style="font-size:18px; margin-right:5px">search</i> Buscar
+                    </button>
                 </div>
-                <div class="filter-grid">
-                    <input type="text" id="f-id" placeholder="ID Ticket">
-                    <input type="text" id="f-subject" placeholder="Asunto">
-                    <input type="text" id="f-email" placeholder="Email">
-                    <select id="f-category">
-                        <option value="">Todas las Categorías</option>
-                        <option value="Sistemas">Sistemas</option>
-                        <option value="RRHH">RRHH</option>
-                        <option value="Finanzas">Finanzas</option>
-                        <option value="General">General</option>
-                    </select>
-                    <select id="f-priority">
-                        <option value="">Todas las Prioridades</option>
-                        <option value="LOW">Baja</option>
-                        <option value="MEDIUM">Media</option>
-                        <option value="HIGH">Alta</option>
-                    </select>
-                    <select id="f-status">
-                        <option value="">Todos los Estados</option>
-                        <option value="OPEN">Abierto</option>
-                        <option value="IN_PROGRESS">En Progreso</option>
-                        <option value="CLOSED">Cerrado</option>
-                    </select>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Asunto</th>
+                                <th>Email</th>
+                                <th>Cat.</th>
+                                <th>SLA (h)</th>
+                                <th>Etiquetas</th>
+                                <th>Prioridad</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ticket-list-body"></tbody>
+                    </table>
                 </div>
-                <button class="btn btn-primary w-full" onclick="applyFilters()">
-                    <i class="material-icons" style="font-size:18px; margin-right:5px">search</i> Buscar
-                </button>
+                <!-- FAB only checks if view is tickets, logic handled by state usually -->
+                <div class="fab" onclick="openTicketModal()"><i class="material-icons">add</i></div>
             </div>
 
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Asunto</th>
-                            <th>Email</th>
-                            <th>Cat.</th>
-                            <th>SLA (h)</th>
-                            <th>Etiquetas</th>
-                            <th>Prioridad</th>
-                            <th>Estado</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="ticket-list-body"></tbody>
-                </table>
+            <!-- View: Settings (Admin Only) -->
+            <div id="view-settings" class="hidden">
+                <h3 style="margin-bottom:20px">Configuración del Sistema</h3>
+                <div style="background:white; padding:20px; border-radius:8px; box-shadow:var(--shadow)">
+                    <div class="input-group">
+                        <label>Límite Máximo de Tickets</label>
+                        <input type="number" id="conf-max-tickets" value="100">
+                    </div>
+                    <div class="input-group flex items-center gap-2">
+                        <input type="checkbox" id="conf-maintenance" style="width:20px; height:20px">
+                        <label style="margin:0; font-size:14px">Modo Mantenimiento</label>
+                    </div>
+                    <button class="btn btn-primary" onclick="saveSettings()">Guardar Configuración</button>
+                </div>
             </div>
-            <div class="fab" onclick="openTicketModal()"><i class="material-icons">add</i></div>
+
         </div>
     </div>
 
@@ -609,6 +696,11 @@
             <div class="input-group">
                 <label>Asunto</label>
                 <input type="text" id="input-subject" placeholder="Ingrese Asunto">
+            </div>
+
+            <div class="input-group">
+                <label>Descripción del Incidente</label>
+                <textarea id="input-description" placeholder="Detalle completo del incidente..."></textarea>
             </div>
 
             <div class="flex gap-4">
@@ -672,6 +764,55 @@
         </div>
     </div>
 
+    <!-- Detail Modal (Read-Only) -->
+    <div class="modal-overlay" id="detail-modal">
+        <div class="modal">
+            <h3 style="margin-bottom:15px; border-bottom:1px solid #ddd; padding-bottom:10px">Detalle del Ticket</h3>
+
+            <div class="detail-row">
+                <div class="detail-label">ID Ticket</div>
+                <div class="detail-value" id="det-id"></div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Asunto</div>
+                <div class="detail-value" id="det-subject"></div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Descripción</div>
+                <div class="detail-value" id="det-description"
+                    style="white-space: pre-wrap; background:#f9f9f9; padding:8px; border-radius:4px;"></div>
+            </div>
+            <div class="flex gap-4">
+                <div class="detail-row flex-1">
+                    <div class="detail-label">Email</div>
+                    <div class="detail-value" id="det-email"></div>
+                </div>
+                <div class="detail-row flex-1">
+                    <div class="detail-label">Categoría</div>
+                    <div class="detail-value" id="det-category"></div>
+                </div>
+            </div>
+            <div class="flex gap-4">
+                <div class="detail-row flex-1">
+                    <div class="detail-label">Estado</div>
+                    <div class="detail-value" id="det-status"></div>
+                </div>
+                <div class="detail-row flex-1">
+                    <div class="detail-label">Prioridad</div>
+                    <div class="detail-value" id="det-priority"></div>
+                </div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Etiquetas</div>
+                <div class="detail-value" id="det-tags"></div>
+            </div>
+
+            <div class="flex justify-end" style="margin-top:20px">
+                <button class="btn btn-primary" onclick="closeDetailModal()">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Error Modal -->
     <div class="modal-overlay" id="error-modal" style="z-index: 2000;">
         <div class="modal result-modal error-modal">
@@ -687,7 +828,7 @@
         <div class="modal result-modal success-modal">
             <i class="material-icons success-icon">check_circle_outline</i>
             <h3>¡Éxito!</h3>
-            <p style="color:#666; margin:10px 0 20px;">El ticket ha sido procesado correctamente.</p>
+            <p style="color:#666; margin:10px 0 20px;">Acción completada con éxito.</p>
             <button class="btn btn-success w-full" onclick="closeSuccessModal()">Continuar</button>
         </div>
     </div>
@@ -706,51 +847,68 @@
     </div>
 
     <script>
-        // Initial Data Default
-        const defaultTickets = [
-            { id: 'TKT-1001', subject: 'Falla conexión servidor', email: 'admin@sys.com', category: 'Sistemas', sla: 4, tags: [{ text: 'critico', color: '#c62828' }, { text: 'infra', color: '#455a64' }], priority: 'HIGH', status: 'OPEN' },
-            { id: 'TKT-1002', subject: 'Actualizar estilos CSS', email: 'dev@web.com', category: 'Sistemas', sla: 48, tags: [{ text: 'frontend', color: '#1976d2' }], priority: 'LOW', status: 'CLOSED' },
-            { id: 'TKT-1003', subject: 'Revisión nómina', email: 'rrhh@corp.com', category: 'RRHH', sla: 24, tags: [{ text: 'confidencial', color: '#e91e63' }], priority: 'MEDIUM', status: 'IN_PROGRESS' }
-        ];
+        // Data & persistence
+        const storageKey = 'ticket-system-v6.3-data';
 
-        // State Manager with LocalStorage
-        const storageKey = 'ticket-system-v5-data';
+        const companies = {
+            'techcorp': { name: 'TechCorp', email: '@techcorp.com' },
+            'softsolutions': { name: 'SoftSolutions', email: '@softsolutions.io' },
+            'innovait': { name: 'InnovaIT', email: '@innovait.net' }
+        };
+
+        const defaultTickets = [];
+        const subjects = ['Falla conexión', 'Error imprimiendo', 'Solicitud acceso', 'Olvido contraseña', 'Lentitud sistema'];
+        const cats = ['Sistemas', 'RRHH', 'Finanzas', 'General'];
+
+        for (let i = 0; i < 60; i++) {
+            defaultTickets.push({
+                id: `TKT-${46000 + i}`,
+                subject: subjects[i % subjects.length] + ` ${i}`,
+                description: 'Descripción autogenerada para el ticket inicial.',
+                email: `usuario${i}@empresa.com`,
+                category: cats[i % cats.length],
+                sla: 24,
+                tags: i % 5 === 0 ? [{ text: 'auto', color: '#7cb342' }] : [],
+                priority: ['LOW', 'MEDIUM', 'HIGH'][i % 3],
+                status: ['OPEN', 'IN_PROGRESS', 'CLOSED'][i % 3]
+            });
+        }
 
         function loadState() {
             const stored = localStorage.getItem(storageKey);
-            if (stored) {
-                return JSON.parse(stored);
-            }
-            return { user: null, tickets: defaultTickets };
+            if (stored) return JSON.parse(stored);
+            return { tickets: defaultTickets, settings: { maxTickets: 100, maintenance: false } };
         }
 
         function persistState() {
-            // Don't save user session for mock strictness, but save data
-            const cleanState = { user: null, tickets: state.tickets };
-            localStorage.setItem(storageKey, JSON.stringify(cleanState));
+            const saveObj = { tickets: state.tickets, settings: state.settings };
+            localStorage.setItem(storageKey, JSON.stringify(saveObj));
         }
 
-        const state = loadState();
+        const appData = loadState();
 
-        // --- Utils ---
+        const state = {
+            user: null,
+            role: null, // 'admin' | 'normal_user'
+            company: null,
+            tickets: appData.tickets,
+            settings: appData.settings
+        };
+
         let deleteTargetId = null;
         let currentEditingTags = [];
+        let currentEditingId = null;
 
-        function generateDynamicId(base) { return `${base}-${Math.random().toString(36).substr(2, 5)}`; }
-
+        // --- Utils ---
         function simulateLatency() {
-            const ms = Math.floor(Math.random() * 1000) + 500;
+            const ms = Math.floor(Math.random() * 800) + 300;
             return new Promise(resolve => setTimeout(resolve, ms));
         }
 
         async function busyAction(actionFn) {
             document.getElementById('loading').classList.remove('hidden');
             await simulateLatency();
-            try {
-                actionFn();
-            } catch (e) {
-                console.error(e);
-            } finally {
+            try { actionFn(); } catch (e) { console.error(e); } finally {
                 document.getElementById('loading').classList.add('hidden');
             }
         }
@@ -760,10 +918,7 @@
             if (subject) subject.id = `input-subject-${Date.now()}`;
         }
 
-        function validateEmail(email) {
-            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            return re.test(email);
-        }
+        function validateEmail(email) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email); }
 
         // --- Modals ---
         function showError(title, msg) {
@@ -772,47 +927,96 @@
             document.getElementById('error-modal').classList.add('active');
         }
         function closeErrorModal() { document.getElementById('error-modal').classList.remove('active'); }
-
-        // Success Modal logic
         function showSuccess() { document.getElementById('success-modal').classList.add('active'); }
         function closeSuccessModal() { document.getElementById('success-modal').classList.remove('active'); }
 
-        // --- Auth ---
+        // --- Auth & RBAC ---
         function login() {
-            const user = document.getElementById('login-user').value;
-            const pass = document.getElementById('login-pass').value;
+            const comp = document.getElementById('login-company').value;
+            const user = document.getElementById('login-user').value.trim();
+            const pass = document.getElementById('login-pass').value.trim();
+
+            if (!comp) return showError("Datos Faltantes", "Debe seleccionar una empresa.");
+            if (!user || !pass) return showError("Datos Faltantes", "Ingrese usuario y contraseña.");
 
             busyAction(() => {
-                if (!user || !pass) return showError("Datos Faltantes", "Ingrese usuario y contraseña.");
+                let role = null;
+                if (user === 'admin' && pass === '12345') role = 'admin';
+                else if (user === 'user' && pass === '12345') role = 'normal_user';
 
-                if (user === 'admin' && pass === '12345') {
+                if (role) {
                     state.user = user;
+                    state.role = role;
+                    state.company = companies[comp];
+
+                    // Setup UI based on Role/Company
                     document.getElementById('user-display').innerText = user;
+                    document.getElementById('role-display').innerText = role === 'admin' ? 'ADMIN' : 'USER';
+                    document.getElementById('company-domain-display').innerText = state.company.email;
+
+                    // Show/Hide Settings Tab
+                    const settNav = document.getElementById('nav-settings');
+                    if (role === 'admin') settNav.classList.remove('hidden');
+                    else settNav.classList.add('hidden');
+
                     document.getElementById('login-screen').classList.add('hidden');
                     document.getElementById('dashboard').classList.remove('hidden');
-                    renderTickets(); // render all initially
+                    switchTab('tickets');
                 } else {
-                    showError("Error de Autenticación", "Credenciales inválidas. (Pruebe: admin / 12345)");
+                    document.getElementById('login-user').value = '';
+                    document.getElementById('login-pass').value = '';
+                    showError("Error de Autenticación", "Credenciales inválidas.");
                 }
             });
         }
 
         function logout() {
             state.user = null;
+            state.role = null;
+            state.company = null;
             document.getElementById('dashboard').classList.add('hidden');
             document.getElementById('login-screen').classList.remove('hidden');
             document.getElementById('login-pass').value = '';
+            document.getElementById('login-company').value = '';
         }
 
-        // --- Tags Logic ---
+        // --- Navigation ---
+        function switchTab(tab) {
+            document.getElementById('view-tickets').classList.add('hidden');
+            document.getElementById('view-settings').classList.add('hidden');
+
+            if (tab === 'tickets') {
+                document.getElementById('view-tickets').classList.remove('hidden');
+                renderTickets();
+            } else if (tab === 'settings') {
+                if (state.role !== 'admin') {
+                    showError("Acceso Denegado", "No tiene permisos para ver esta sección.");
+                    return;
+                }
+                document.getElementById('view-settings').classList.remove('hidden');
+                // Load settings values
+                document.getElementById('conf-max-tickets').value = state.settings.maxTickets || 100;
+                document.getElementById('conf-maintenance').checked = state.settings.maintenance || false;
+            }
+        }
+
+        // --- Settings (Admin) ---
+        function saveSettings() {
+            busyAction(() => {
+                state.settings.maxTickets = document.getElementById('conf-max-tickets').value;
+                state.settings.maintenance = document.getElementById('conf-maintenance').checked;
+                persistState();
+                showSuccess();
+            });
+        }
+
+        // --- Tags ---
         function renderTagPills(containerId, tags, removeable = false) {
             const container = document.getElementById(containerId);
             container.innerHTML = '';
             tags.forEach((tag, idx) => {
-                // Handle legacy string tags just in case
                 const text = tag.text || tag;
                 const color = tag.color || '#9e9e9e';
-
                 const pill = document.createElement('span');
                 pill.className = 'tag-pill';
                 pill.style.backgroundColor = color;
@@ -820,19 +1024,15 @@
                 container.appendChild(pill);
             });
         }
-
         function addTag() {
-            const textInput = document.getElementById('tag-input-text');
-            const colorInput = document.getElementById('tag-input-color');
-            const text = textInput.value.trim();
-
-            if (text) {
-                currentEditingTags.push({ text: text, color: colorInput.value });
-                textInput.value = '';
+            const txt = document.getElementById('tag-input-text').value.trim();
+            const col = document.getElementById('tag-input-color').value;
+            if (txt) {
+                currentEditingTags.push({ text: txt, color: col });
+                document.getElementById('tag-input-text').value = '';
                 renderTagPills('active-tags-container', currentEditingTags, true);
             }
         }
-
         function removeTag(idx) {
             currentEditingTags.splice(idx, 1);
             renderTagPills('active-tags-container', currentEditingTags, true);
@@ -849,43 +1049,38 @@
                 if (filters.email && !t.email.toLowerCase().includes(filters.email.toLowerCase())) return false;
                 if (filters.category && t.category !== filters.category) return false;
                 if (filters.priority && t.priority !== filters.priority) return false;
-                if (filters.status && t.status !== filters.status) return false;
                 return true;
             });
 
             filtered.forEach(ticket => {
-                // Render tags for table
-                const tagHtml = (ticket.tags || []).map(tag => {
-                    const text = tag.text || tag;
-                    const color = tag.color || '#9e9e9e';
-                    return `<span class="tag-pill" style="background-color:${color}">${text}</span>`;
-                }).join('');
+                const tagHtml = (ticket.tags || []).map(t => `<span class="tag-pill" style="background-color:${t.color}">${t.text}</span>`).join('');
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                        <td><strong>${ticket.id}</strong></td>
-                        <td>${ticket.subject}</td>
-                        <td>${ticket.email}</td>
-                        <td>${ticket.category}</td>
-                        <td>${ticket.sla}h</td>
-                        <td>${tagHtml}</td>
-                        <td><span class="status-badge status-${ticket.priority.toLowerCase()}">${ticket.priority}</span></td>
-                         <td>${ticket.status}</td>
-                        <td>
-                            <button class="btn btn-flat btn-icon" onclick="editTicket('${ticket.id}')">
-                                <i class="material-icons" style="font-size:18px">edit</i>
-                            </button>
-                            <button class="btn btn-flat btn-icon" style="color:var(--error-color)" onclick="askDelete('${ticket.id}')">
-                                <i class="material-icons" style="font-size:18px">delete</i>
-                            </button>
-                        </td>
-                    `;
+                    <td><strong>${ticket.id}</strong></td>
+                    <td>${ticket.subject}</td>
+                    <td>${ticket.email}</td>
+                    <td>${ticket.category}</td>
+                    <td>${ticket.sla}h</td>
+                    <td>${tagHtml}</td>
+                    <td><span class="status-badge status-${ticket.priority.toLowerCase()}">${ticket.priority}</span></td>
+                    <td><span class="status-badge status-${ticket.status.toLowerCase()}">${ticket.status}</span></td>
+                    <td>
+                         <button class="btn btn-flat btn-icon" onclick="viewTicket('${ticket.id}')" title="Ver Detalle">
+                            <i class="material-icons" style="font-size:18px">visibility</i>
+                        </button>
+                        <button class="btn btn-flat btn-icon" onclick="editTicket('${ticket.id}')" title="Editar">
+                            <i class="material-icons" style="font-size:18px">edit</i>
+                        </button>
+                        <button class="btn btn-flat btn-icon" style="color:var(--error-color)" onclick="askDelete('${ticket.id}')" title="Eliminar">
+                            <i class="material-icons" style="font-size:18px">delete</i>
+                        </button>
+                    </td>
+                `;
                 tbody.appendChild(tr);
             });
 
-            if (filtered.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:20px; color:#999">No se encontraron tickets con esos criterios.</td></tr>';
-            }
+            if (filtered.length === 0) tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:20px; color:#999">No hay tickets.</td></tr>';
         }
 
         function applyFilters() {
@@ -894,35 +1089,52 @@
                 subject: document.getElementById('f-subject').value,
                 email: document.getElementById('f-email').value,
                 category: document.getElementById('f-category').value,
-                priority: document.getElementById('f-priority').value,
-                status: document.getElementById('f-status').value
+                priority: document.getElementById('f-priority').value
             };
             renderTickets(filters);
         }
-
         function clearFilters() {
-            document.getElementById('f-id').value = '';
-            document.getElementById('f-subject').value = '';
-            document.getElementById('f-email').value = '';
-            document.getElementById('f-category').value = '';
-            document.getElementById('f-priority').value = '';
-            document.getElementById('f-status').value = '';
+            document.querySelectorAll('.filter-grid input, .filter-grid select').forEach(i => i.value = '');
             renderTickets();
         }
 
-        let currentEditingId = null;
+        // View Detail Logic
+        function viewTicket(id) {
+            const t = state.tickets.find(x => x.id === id);
+            if (!t) return;
+            document.getElementById('det-id').innerText = t.id;
+            document.getElementById('det-subject').innerText = t.subject;
+            document.getElementById('det-description').innerText = t.description || 'Sin descripción.';
+            document.getElementById('det-email').innerText = t.email;
+            document.getElementById('det-category').innerText = t.category;
+            document.getElementById('det-status').innerText = t.status;
+            document.getElementById('det-priority').innerText = t.priority;
 
+            const tagContainer = document.getElementById('det-tags');
+            tagContainer.innerHTML = '';
+            (t.tags || []).forEach(tag => {
+                const el = document.createElement('span');
+                el.className = 'tag-pill';
+                el.style.backgroundColor = tag.color;
+                el.innerText = tag.text;
+                tagContainer.appendChild(el);
+            });
+
+            document.getElementById('detail-modal').classList.add('active');
+        }
+        function closeDetailModal() { document.getElementById('detail-modal').classList.remove('active'); }
+
+        // Create/Edit Logic
         function openTicketModal(ticketId = null) {
             currentEditingId = ticketId;
             const modal = document.getElementById('ticket-modal');
             const title = document.getElementById('modal-title');
 
-            // Get inputs
-            const subject = document.querySelector('input[placeholder="Ingrese Asunto"]');
+            // Inputs
+            const subject = document.querySelector('input[id^="input-subject"]');
+            const desc = document.getElementById('input-description');
             const email = document.getElementById('input-email');
             const sla = document.getElementById('input-sla');
-            // Tags are handled by render function
-
             const cat = document.getElementById('input-category');
             const prio = document.getElementById('input-priority');
             const stat = document.getElementById('input-status');
@@ -931,95 +1143,76 @@
                 const t = state.tickets.find(x => x.id === ticketId);
                 title.innerText = `Editar Ticket ${t.id}`;
                 subject.value = t.subject;
-                email.value = t.email || '';
-                sla.value = t.sla || 24;
-
-                // Deep copy tags to avoid mutation during edit
-                currentEditingTags = JSON.parse(JSON.stringify(t.tags || []));
-
-                cat.value = t.category || 'General';
+                desc.value = t.description || '';
+                email.value = t.email;
+                sla.value = t.sla;
+                cat.value = t.category;
                 prio.value = t.priority;
                 stat.value = t.status;
+                currentEditingTags = JSON.parse(JSON.stringify(t.tags || []));
             } else {
                 title.innerText = "Nuevo Ticket";
-                subject.value = "";
-                email.value = "";
-                sla.value = 24;
+                subject.value = ""; desc.value = ""; email.value = ""; sla.value = 24;
+                cat.value = "Sistemas"; prio.value = "LOW"; stat.value = "OPEN";
                 currentEditingTags = [];
-                cat.value = "Sistemas";
-                prio.value = "LOW";
-                stat.value = "OPEN";
             }
-
             renderTagPills('active-tags-container', currentEditingTags, true);
             modal.classList.add('active');
         }
-
         function closeTicketModal() { document.getElementById('ticket-modal').classList.remove('active'); }
         function editTicket(id) { openTicketModal(id); }
 
         function saveTicket() {
-            // Fetch Values
-            const subject = document.querySelector('input[placeholder="Ingrese Asunto"]').value;
+            const subjectInput = document.querySelector('input[id^="input-subject"]');
+            const subject = subjectInput.value;
+            const desc = document.getElementById('input-description').value;
             const email = document.getElementById('input-email').value;
             const sla = document.getElementById('input-sla').value;
+            // ... other gets
 
-            const category = document.getElementById('input-category').value;
-            const priority = document.getElementById('input-priority').value;
-            const status = document.getElementById('input-status').value;
-
-            // Simple Validation
-            if (!subject) return showError("Validación", "El asunto es requerido.");
-            if (!email) return showError("Validación", "El email es requerido.");
-            if (!validateEmail(email)) return showError("Validación", "El formato del email es inválido.");
-            if (!sla || sla <= 0) return showError("Validación", "El SLA debe ser un número positivo de horas.");
+            if (!subject || !email || !sla) return showError("Validación", "Complete campos obligatorios.");
+            if (!validateEmail(email)) return showError("Validación", "Email inválido.");
 
             busyAction(() => {
-                // 30% Random Failure
-                if (Math.random() < 0.3) return showError("Error de Sincronización", "Fallo al conectar con el servidor. Intente nuevamente.");
+                if (Math.random() < 0.2) return showError("Error", "Error simulado.");
+
+                const ticketData = {
+                    subject, description: desc, email, sla: parseInt(sla),
+                    tags: currentEditingTags,
+                    category: document.getElementById('input-category').value,
+                    priority: document.getElementById('input-priority').value,
+                    status: document.getElementById('input-status').value
+                };
 
                 if (currentEditingId) {
-                    const t = state.tickets.find(x => x.id === currentEditingId);
-                    t.subject = subject;
-                    t.email = email;
-                    t.sla = parseInt(sla);
-                    t.tags = currentEditingTags;
-                    t.category = category;
-                    t.priority = priority;
-                    t.status = status;
+                    const idx = state.tickets.findIndex(x => x.id === currentEditingId);
+                    if (idx >= 0) state.tickets[idx] = { ...state.tickets[idx], ...ticketData };
                 } else {
                     const newId = `TKT-${1000 + state.tickets.length + 1}`;
-                    state.tickets.push({
-                        id: newId, subject, email, sla: parseInt(sla), tags: currentEditingTags,
-                        category, priority, status
-                    });
+                    state.tickets.push({ id: newId, ...ticketData });
                 }
 
-                persistState(); // Save to LocalStorage
+                persistState();
                 closeTicketModal();
-                applyFilters(); // Re-render preserving filters
-                showSuccess(); // Show success modal
+                renderTickets();
+                showSuccess();
             });
         }
 
-        function askDelete(id) {
-            deleteTargetId = id;
-            document.getElementById('delete-modal').classList.add('active');
-        }
+        // Delete Logic
+        function askDelete(id) { deleteTargetId = id; document.getElementById('delete-modal').classList.add('active'); }
         function closeDeleteModal() { document.getElementById('delete-modal').classList.remove('active'); }
-
         function confirmDelete() {
             if (!deleteTargetId) return;
             closeDeleteModal();
             busyAction(() => {
                 state.tickets = state.tickets.filter(t => t.id !== deleteTargetId);
-                persistState(); // Save to LocalStorage
-                applyFilters();
-                deleteTargetId = null;
+                persistState();
+                renderTickets();
             });
         }
 
-        window.onload = function () { scrambleIds(); };
+        window.onload = scrambleIds;
 
     </script>
 </body>
