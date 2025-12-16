@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Tickets Mock</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #6200ea;
+            --primary-light: #b388ff;
+            --secondary-color: #03dac6;
+            --background-color: #f5f5f5;
+            --surface-color: #ffffff;
+            --error-color: #b00020;
+            --success-color: #2e7d32;
+            --text-color: #333333;
+            --text-secondary: #666666;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+            --radius: 8px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Utilities */
+        .hidden {
+            display: none !important;
+        }
+
+        .flex {
+            display: flex;
+        }
+
+        .flex-wrap {
+            flex-wrap: wrap;
+        }
+
+        .flex-col {
+            flex-direction: column;
+        }
+
+        .items-center {
+            align-items: center;
+        }
+
+        .justify-between {
+            justify-content: space-between;
+        }
+
+        .gap-2 {
+            gap: 8px;
+        }
+
+        .gap-4 {
+            gap: 16px;
+        }
+
+        .mt-2 {
+            margin-top: 8px;
+        }
+
+        .w-full {
+            width: 100%;
+        }
+
+        /* Buttons */
+        .btn {
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-weight: 500;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-primary:hover {
+            background-color: #3700b3;
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            color: black;
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .btn-danger {
+            background-color: var(--error-color);
+            color: white;
+        }
+
+        .btn-flat {
+            background: transparent;
+            color: var(--primary-color);
+        }
+
+        .btn-icon {
+            padding: 8px;
+            border-radius: 50%;
+        }
+
+        .btn-sm {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+
+        /* Inputs */
+        .input-group {
+            margin-bottom: 20px;
+            position: relative;
+            width: 100%;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            background: var(--surface-color);
+            transition: border-color 0.3s;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        /* Login Placeholder Fix (Floating Label) */
+        .login-input-group {
+            margin-bottom: 25px;
+            position: relative
+        }
+
+        .login-input-group input {
+            padding: 12px;
+        }
+
+        .login-input-group label {
+            position: absolute;
+            left: 12px;
+            top: 12px;
+            pointer-events: none;
+            transition: 0.2s;
+            background: white;
+            padding: 0 4px;
+            color: #999;
+            font-weight: normal;
+            font-size: 16px;
+            margin: 0;
+        }
+
+        .login-input-group input:focus+label,
+        .login-input-group input:not(:placeholder-shown)+label {
+            top: -10px;
+            font-size: 12px;
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+
+        /* Login */
+        #login-screen {
+            height: 100vh;
+            width: 100vw;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            z-index: 100;
+        }
+
+        .login-card {
+            background: var(--surface-color);
+            padding: 40px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        /* Dashboard */
+        #dashboard {
+            display: flex;
+            height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: var(--surface-color);
+            border-right: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            background: var(--primary-color);
+            color: white;
+            font-weight: bold;
+        }
+
+        .nav-item {
+            padding: 15px 20px;
+            color: var(--text-color);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-item.active {
+            background-color: #e8eaf6;
+            color: var(--primary-color);
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            background: var(--surface-color);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+            border-radius: var(--radius);
+        }
+
+        /* Filter Section */
+        .filter-section {
+            background: var(--surface-color);
+            padding: 20px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        /* Table */
+        .table-container {
+            background: var(--surface-color);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: auto;
+            flex: 1;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+
+        th,
+        td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+        }
+
+        th {
+            background-color: #fafafa;
+            color: var(--text-secondary);
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        tr:hover {
+            background-color: #f9f9f9;
+        }
+
+        /* Badges & Tags */
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .status-low {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .status-medium {
+            background-color: #fff3e0;
+            color: #ef6c00;
+        }
+
+        .status-high {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+
+        .tag-pill {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            margin-right: 4px;
+            display: inline-flex;
+            align-items: center;
+            color: white;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .tag-remove {
+            margin-left: 5px;
+            cursor: pointer;
+            opacity: 0.8;
+        }
+
+        .tag-remove:hover {
+            opacity: 1;
+        }
+
+        /* FAB */
+        .fab {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--secondary-color);
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: black;
+            cursor: pointer;
+            transition: transform 0.2s;
+            z-index: 10;
+        }
+
+        .fab:hover {
+            transform: scale(1.1);
+        }
+
+        /* Modals */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal {
+            background: var(--surface-color);
+            padding: 30px;
+            border-radius: var(--radius);
+            width: 90%;
+            max-width: 600px;
+            box-shadow: var(--shadow-lg);
+            transform: translateY(20px);
+            transition: transform 0.3s;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-overlay.active .modal {
+            transform: translateY(0);
+        }
+
+        .result-modal {
+            text-align: center;
+            max-width: 400px;
+        }
+
+        .result-modal i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .success-icon {
+            color: var(--success-color);
+        }
+
+        .error-modal {
+            border-top: 5px solid var(--error-color);
+        }
+
+        .error-icon {
+            color: var(--error-color);
+        }
+
+        .success-modal {
+            border-top: 5px solid var(--success-color);
+        }
+
+        /* Loading Spinner */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            z-index: 3000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Loading Spinner -->
+    <div id="loading" class="loading-overlay hidden">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Login Screen -->
+    <div id="login-screen">
+        <div class="login-card">
+            <h2>Sistema de Tickets</h2>
+            <div class="login-input-group">
+                <input type="text" id="login-user" placeholder=" " required>
+                <label>Usuario</label>
+            </div>
+            <div class="login-input-group">
+                <input type="password" id="login-pass" placeholder=" " required>
+                <label>Contraseña</label>
+            </div>
+            <p style="font-size:12px; color:#999; margin-bottom:15px;">Hint: admin / 12345</p>
+            <button class="btn btn-primary" onclick="login()" style="width:100%">
+                INGRESAR
+            </button>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboard" class="hidden">
+        <div class="sidebar">
+            <div class="sidebar-header">TicketSystem v5.0</div>
+            <div class="nav-item active"><i class="material-icons">dashboard</i> Tickets</div>
+            <div class="nav-item"><i class="material-icons">settings</i> Configuración</div>
+        </div>
+        <div class="main-content">
+            <div class="top-bar">
+                <div class="flex items-center gap-2">
+                    <span style="font-weight:bold; font-size:18px">Gestión de Tickets</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span id="user-display">Usuario</span>
+                    <button class="btn btn-flat btn-icon" onclick="logout()"><i
+                            class="material-icons">logout</i></button>
+                </div>
+            </div>
+
+            <!-- Advanced Filters -->
+            <div class="filter-section">
+                <div class="flex justify-between items-center" style="margin-bottom:15px">
+                    <h4 style="margin:0">Filtros Avanzados</h4>
+                    <button class="btn btn-flat" style="padding:5px" onclick="clearFilters()">Limpiar</button>
+                </div>
+                <div class="filter-grid">
+                    <input type="text" id="f-id" placeholder="ID Ticket">
+                    <input type="text" id="f-subject" placeholder="Asunto">
+                    <input type="text" id="f-email" placeholder="Email">
+                    <select id="f-category">
+                        <option value="">Todas las Categorías</option>
+                        <option value="Sistemas">Sistemas</option>
+                        <option value="RRHH">RRHH</option>
+                        <option value="Finanzas">Finanzas</option>
+                        <option value="General">General</option>
+                    </select>
+                    <select id="f-priority">
+                        <option value="">Todas las Prioridades</option>
+                        <option value="LOW">Baja</option>
+                        <option value="MEDIUM">Media</option>
+                        <option value="HIGH">Alta</option>
+                    </select>
+                    <select id="f-status">
+                        <option value="">Todos los Estados</option>
+                        <option value="OPEN">Abierto</option>
+                        <option value="IN_PROGRESS">En Progreso</option>
+                        <option value="CLOSED">Cerrado</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary w-full" onclick="applyFilters()">
+                    <i class="material-icons" style="font-size:18px; margin-right:5px">search</i> Buscar
+                </button>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Asunto</th>
+                            <th>Email</th>
+                            <th>Cat.</th>
+                            <th>SLA (h)</th>
+                            <th>Etiquetas</th>
+                            <th>Prioridad</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ticket-list-body"></tbody>
+                </table>
+            </div>
+            <div class="fab" onclick="openTicketModal()"><i class="material-icons">add</i></div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div class="modal-overlay" id="ticket-modal">
+        <div class="modal">
+            <h3 id="modal-title" style="margin-bottom:20px">Nuevo Ticket</h3>
+
+            <div class="input-group">
+                <label>Asunto</label>
+                <input type="text" id="input-subject" placeholder="Ingrese Asunto">
+            </div>
+
+            <div class="flex gap-4">
+                <div class="input-group" style="flex:1">
+                    <label>Email Solicitante</label>
+                    <input type="text" id="input-email" placeholder="usuario@ejemplo.com">
+                </div>
+                <div class="input-group" style="width:120px">
+                    <label>SLA (Horas)</label>
+                    <input type="number" id="input-sla" placeholder="24" min="1">
+                </div>
+            </div>
+
+            <div class="flex gap-4">
+                <div class="input-group" style="flex:1">
+                    <label>Categoría</label>
+                    <select id="input-category">
+                        <option value="Sistemas">Sistemas</option>
+                        <option value="RRHH">RRHH</option>
+                        <option value="Finanzas">Finanzas</option>
+                        <option value="General">General</option>
+                    </select>
+                </div>
+                <div class="input-group" style="flex:1">
+                    <label>Prioridad</label>
+                    <select id="input-priority">
+                        <option value="LOW">Baja</option>
+                        <option value="MEDIUM">Media</option>
+                        <option value="HIGH">Alta</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Tag Builder -->
+            <div class="input-group">
+                <label>Etiquetas</label>
+                <div class="flex gap-2">
+                    <input type="text" id="tag-input-text" placeholder="Nueva etiqueta..." style="flex:2">
+                    <input type="color" id="tag-input-color" value="#6200ea"
+                        style="width:50px; padding:0; height:44px; cursor:pointer">
+                    <button class="btn btn-secondary btn-sm" onclick="addTag()">Agregar</button>
+                </div>
+                <div id="active-tags-container" class="flex flex-wrap gap-2 mt-2">
+                    <!-- Pills go here -->
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Estado</label>
+                <select id="input-status">
+                    <option value="OPEN">Abierto</option>
+                    <option value="IN_PROGRESS">En Progreso</option>
+                    <option value="CLOSED">Cerrado</option>
+                </select>
+            </div>
+
+            <div class="flex justify-between" style="margin-top:20px">
+                <button class="btn btn-flat" onclick="closeTicketModal()">Cancelar</button>
+                <button class="btn btn-primary" onclick="saveTicket()">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div class="modal-overlay" id="error-modal" style="z-index: 2000;">
+        <div class="modal result-modal error-modal">
+            <i class="material-icons error-icon">error_outline</i>
+            <h3 id="error-title">Error</h3>
+            <p id="error-message" style="color:#666; margin:10px 0 20px;">Mensaje de error.</p>
+            <button class="btn btn-danger w-full" onclick="closeErrorModal()">Cerrar</button>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal-overlay" id="success-modal" style="z-index: 2000;">
+        <div class="modal result-modal success-modal">
+            <i class="material-icons success-icon">check_circle_outline</i>
+            <h3>¡Éxito!</h3>
+            <p style="color:#666; margin:10px 0 20px;">El ticket ha sido procesado correctamente.</p>
+            <button class="btn btn-success w-full" onclick="closeSuccessModal()">Continuar</button>
+        </div>
+    </div>
+
+    <!-- Delete Confirm Modal -->
+    <div class="modal-overlay" id="delete-modal" style="z-index: 2000;">
+        <div class="modal result-modal">
+            <i class="material-icons" style="color:#666;">delete</i>
+            <h3>¿Estás seguro?</h3>
+            <p style="margin:10px 0 20px; color:#666">Esta acción no se puede deshacer.</p>
+            <div class="flex justify-between gap-2">
+                <button class="btn btn-flat w-full" onclick="closeDeleteModal()">Cancelar</button>
+                <button class="btn btn-danger w-full" onclick="confirmDelete()">Eliminar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initial Data Default
+        const defaultTickets = [
+            { id: 'TKT-1001', subject: 'Falla conexión servidor', email: 'admin@sys.com', category: 'Sistemas', sla: 4, tags: [{ text: 'critico', color: '#c62828' }, { text: 'infra', color: '#455a64' }], priority: 'HIGH', status: 'OPEN' },
+            { id: 'TKT-1002', subject: 'Actualizar estilos CSS', email: 'dev@web.com', category: 'Sistemas', sla: 48, tags: [{ text: 'frontend', color: '#1976d2' }], priority: 'LOW', status: 'CLOSED' },
+            { id: 'TKT-1003', subject: 'Revisión nómina', email: 'rrhh@corp.com', category: 'RRHH', sla: 24, tags: [{ text: 'confidencial', color: '#e91e63' }], priority: 'MEDIUM', status: 'IN_PROGRESS' }
+        ];
+
+        // State Manager with LocalStorage
+        const storageKey = 'ticket-system-v5-data';
+
+        function loadState() {
+            const stored = localStorage.getItem(storageKey);
+            if (stored) {
+                return JSON.parse(stored);
+            }
+            return { user: null, tickets: defaultTickets };
+        }
+
+        function persistState() {
+            // Don't save user session for mock strictness, but save data
+            const cleanState = { user: null, tickets: state.tickets };
+            localStorage.setItem(storageKey, JSON.stringify(cleanState));
+        }
+
+        const state = loadState();
+
+        // --- Utils ---
+        let deleteTargetId = null;
+        let currentEditingTags = [];
+
+        function generateDynamicId(base) { return `${base}-${Math.random().toString(36).substr(2, 5)}`; }
+
+        function simulateLatency() {
+            const ms = Math.floor(Math.random() * 1000) + 500;
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        async function busyAction(actionFn) {
+            document.getElementById('loading').classList.remove('hidden');
+            await simulateLatency();
+            try {
+                actionFn();
+            } catch (e) {
+                console.error(e);
+            } finally {
+                document.getElementById('loading').classList.add('hidden');
+            }
+        }
+
+        function scrambleIds() {
+            const subject = document.getElementById('input-subject');
+            if (subject) subject.id = `input-subject-${Date.now()}`;
+        }
+
+        function validateEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+
+        // --- Modals ---
+        function showError(title, msg) {
+            document.getElementById('error-title').innerText = title;
+            document.getElementById('error-message').innerText = msg;
+            document.getElementById('error-modal').classList.add('active');
+        }
+        function closeErrorModal() { document.getElementById('error-modal').classList.remove('active'); }
+
+        // Success Modal logic
+        function showSuccess() { document.getElementById('success-modal').classList.add('active'); }
+        function closeSuccessModal() { document.getElementById('success-modal').classList.remove('active'); }
+
+        // --- Auth ---
+        function login() {
+            const user = document.getElementById('login-user').value;
+            const pass = document.getElementById('login-pass').value;
+
+            busyAction(() => {
+                if (!user || !pass) return showError("Datos Faltantes", "Ingrese usuario y contraseña.");
+
+                if (user === 'admin' && pass === '12345') {
+                    state.user = user;
+                    document.getElementById('user-display').innerText = user;
+                    document.getElementById('login-screen').classList.add('hidden');
+                    document.getElementById('dashboard').classList.remove('hidden');
+                    renderTickets(); // render all initially
+                } else {
+                    showError("Error de Autenticación", "Credenciales inválidas. (Pruebe: admin / 12345)");
+                }
+            });
+        }
+
+        function logout() {
+            state.user = null;
+            document.getElementById('dashboard').classList.add('hidden');
+            document.getElementById('login-screen').classList.remove('hidden');
+            document.getElementById('login-pass').value = '';
+        }
+
+        // --- Tags Logic ---
+        function renderTagPills(containerId, tags, removeable = false) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            tags.forEach((tag, idx) => {
+                // Handle legacy string tags just in case
+                const text = tag.text || tag;
+                const color = tag.color || '#9e9e9e';
+
+                const pill = document.createElement('span');
+                pill.className = 'tag-pill';
+                pill.style.backgroundColor = color;
+                pill.innerHTML = `${text} ${removeable ? `<i class="material-icons tag-remove" style="font-size:12px" onclick="removeTag(${idx})">close</i>` : ''}`;
+                container.appendChild(pill);
+            });
+        }
+
+        function addTag() {
+            const textInput = document.getElementById('tag-input-text');
+            const colorInput = document.getElementById('tag-input-color');
+            const text = textInput.value.trim();
+
+            if (text) {
+                currentEditingTags.push({ text: text, color: colorInput.value });
+                textInput.value = '';
+                renderTagPills('active-tags-container', currentEditingTags, true);
+            }
+        }
+
+        function removeTag(idx) {
+            currentEditingTags.splice(idx, 1);
+            renderTagPills('active-tags-container', currentEditingTags, true);
+        }
+
+        // --- Tickets ---
+        function renderTickets(filters = {}) {
+            const tbody = document.getElementById('ticket-list-body');
+            tbody.innerHTML = '';
+
+            const filtered = state.tickets.filter(t => {
+                if (filters.id && !t.id.toLowerCase().includes(filters.id.toLowerCase())) return false;
+                if (filters.subject && !t.subject.toLowerCase().includes(filters.subject.toLowerCase())) return false;
+                if (filters.email && !t.email.toLowerCase().includes(filters.email.toLowerCase())) return false;
+                if (filters.category && t.category !== filters.category) return false;
+                if (filters.priority && t.priority !== filters.priority) return false;
+                if (filters.status && t.status !== filters.status) return false;
+                return true;
+            });
+
+            filtered.forEach(ticket => {
+                // Render tags for table
+                const tagHtml = (ticket.tags || []).map(tag => {
+                    const text = tag.text || tag;
+                    const color = tag.color || '#9e9e9e';
+                    return `<span class="tag-pill" style="background-color:${color}">${text}</span>`;
+                }).join('');
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                        <td><strong>${ticket.id}</strong></td>
+                        <td>${ticket.subject}</td>
+                        <td>${ticket.email}</td>
+                        <td>${ticket.category}</td>
+                        <td>${ticket.sla}h</td>
+                        <td>${tagHtml}</td>
+                        <td><span class="status-badge status-${ticket.priority.toLowerCase()}">${ticket.priority}</span></td>
+                         <td>${ticket.status}</td>
+                        <td>
+                            <button class="btn btn-flat btn-icon" onclick="editTicket('${ticket.id}')">
+                                <i class="material-icons" style="font-size:18px">edit</i>
+                            </button>
+                            <button class="btn btn-flat btn-icon" style="color:var(--error-color)" onclick="askDelete('${ticket.id}')">
+                                <i class="material-icons" style="font-size:18px">delete</i>
+                            </button>
+                        </td>
+                    `;
+                tbody.appendChild(tr);
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:20px; color:#999">No se encontraron tickets con esos criterios.</td></tr>';
+            }
+        }
+
+        function applyFilters() {
+            const filters = {
+                id: document.getElementById('f-id').value,
+                subject: document.getElementById('f-subject').value,
+                email: document.getElementById('f-email').value,
+                category: document.getElementById('f-category').value,
+                priority: document.getElementById('f-priority').value,
+                status: document.getElementById('f-status').value
+            };
+            renderTickets(filters);
+        }
+
+        function clearFilters() {
+            document.getElementById('f-id').value = '';
+            document.getElementById('f-subject').value = '';
+            document.getElementById('f-email').value = '';
+            document.getElementById('f-category').value = '';
+            document.getElementById('f-priority').value = '';
+            document.getElementById('f-status').value = '';
+            renderTickets();
+        }
+
+        let currentEditingId = null;
+
+        function openTicketModal(ticketId = null) {
+            currentEditingId = ticketId;
+            const modal = document.getElementById('ticket-modal');
+            const title = document.getElementById('modal-title');
+
+            // Get inputs
+            const subject = document.querySelector('input[placeholder="Ingrese Asunto"]');
+            const email = document.getElementById('input-email');
+            const sla = document.getElementById('input-sla');
+            // Tags are handled by render function
+
+            const cat = document.getElementById('input-category');
+            const prio = document.getElementById('input-priority');
+            const stat = document.getElementById('input-status');
+
+            if (ticketId) {
+                const t = state.tickets.find(x => x.id === ticketId);
+                title.innerText = `Editar Ticket ${t.id}`;
+                subject.value = t.subject;
+                email.value = t.email || '';
+                sla.value = t.sla || 24;
+
+                // Deep copy tags to avoid mutation during edit
+                currentEditingTags = JSON.parse(JSON.stringify(t.tags || []));
+
+                cat.value = t.category || 'General';
+                prio.value = t.priority;
+                stat.value = t.status;
+            } else {
+                title.innerText = "Nuevo Ticket";
+                subject.value = "";
+                email.value = "";
+                sla.value = 24;
+                currentEditingTags = [];
+                cat.value = "Sistemas";
+                prio.value = "LOW";
+                stat.value = "OPEN";
+            }
+
+            renderTagPills('active-tags-container', currentEditingTags, true);
+            modal.classList.add('active');
+        }
+
+        function closeTicketModal() { document.getElementById('ticket-modal').classList.remove('active'); }
+        function editTicket(id) { openTicketModal(id); }
+
+        function saveTicket() {
+            // Fetch Values
+            const subject = document.querySelector('input[placeholder="Ingrese Asunto"]').value;
+            const email = document.getElementById('input-email').value;
+            const sla = document.getElementById('input-sla').value;
+
+            const category = document.getElementById('input-category').value;
+            const priority = document.getElementById('input-priority').value;
+            const status = document.getElementById('input-status').value;
+
+            // Simple Validation
+            if (!subject) return showError("Validación", "El asunto es requerido.");
+            if (!email) return showError("Validación", "El email es requerido.");
+            if (!validateEmail(email)) return showError("Validación", "El formato del email es inválido.");
+            if (!sla || sla <= 0) return showError("Validación", "El SLA debe ser un número positivo de horas.");
+
+            busyAction(() => {
+                // 30% Random Failure
+                if (Math.random() < 0.3) return showError("Error de Sincronización", "Fallo al conectar con el servidor. Intente nuevamente.");
+
+                if (currentEditingId) {
+                    const t = state.tickets.find(x => x.id === currentEditingId);
+                    t.subject = subject;
+                    t.email = email;
+                    t.sla = parseInt(sla);
+                    t.tags = currentEditingTags;
+                    t.category = category;
+                    t.priority = priority;
+                    t.status = status;
+                } else {
+                    const newId = `TKT-${1000 + state.tickets.length + 1}`;
+                    state.tickets.push({
+                        id: newId, subject, email, sla: parseInt(sla), tags: currentEditingTags,
+                        category, priority, status
+                    });
+                }
+
+                persistState(); // Save to LocalStorage
+                closeTicketModal();
+                applyFilters(); // Re-render preserving filters
+                showSuccess(); // Show success modal
+            });
+        }
+
+        function askDelete(id) {
+            deleteTargetId = id;
+            document.getElementById('delete-modal').classList.add('active');
+        }
+        function closeDeleteModal() { document.getElementById('delete-modal').classList.remove('active'); }
+
+        function confirmDelete() {
+            if (!deleteTargetId) return;
+            closeDeleteModal();
+            busyAction(() => {
+                state.tickets = state.tickets.filter(t => t.id !== deleteTargetId);
+                persistState(); // Save to LocalStorage
+                applyFilters();
+                deleteTargetId = null;
+            });
+        }
+
+        window.onload = function () { scrambleIds(); };
+
+    </script>
+</body>
+
+</html>
